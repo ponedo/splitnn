@@ -193,12 +193,13 @@ def prepare_env_on_remote_machines(remote_machines, server_config_list):
     execute_command_on_multiple_machines(
         remote_machines, {
             server["ipAddr"]: (
-                "make", server["infraWorkDir"], None, False
+                "export GOPROXY=https://goproxy.cn,direct && make", server["infraWorkDir"], None, False
+                # "make", server["infraWorkDir"], None, False
             ) for server in server_config_list
         }
     )
 
-    # Pull docker image on each machine
+    # Pull docker image needed on each machine
     execute_command_on_multiple_machines(
         remote_machines, {
             server["ipAddr"]: (
@@ -224,10 +225,11 @@ def get_sub_topo_filename(topo_args, i):
 
 
 BEST_K_FACTOR = 2.353
-def get_server_best_bbns_num(sub_topo_filepath, i):
+def get_server_best_bbns_num(sub_topo_filepath, server_config_list, i):
     line_num = count_lines_islice(sub_topo_filepath)
     link_num = line_num - 1
-    best_bbns_num = math.ceil(BEST_K_FACTOR * math.sqrt(link_num))
+    best_k_factor = server_config_list[i].get("server_best_bbns_factor", BEST_K_FACTOR)
+    best_bbns_num = math.ceil(best_k_factor * math.sqrt(link_num))
     print(f"Server {i} topo link num: {link_num}, best bbns num: {best_bbns_num}")
     return best_bbns_num
 
@@ -307,7 +309,7 @@ def yield_one_cmd(opts, const_options, server_spec_options, server_config_list):
         # Generate best bbns number for each server
         if USE_BEST_BBNS_NUM:
             server_i_best_bbns_num = get_server_best_bbns_num(
-                local_sub_topo_filepath, i)
+                local_sub_topo_filepath, server_config_list, i)
             server_i_opts.update({
                 "b": server_i_best_bbns_num
             })
@@ -367,6 +369,10 @@ def reap_one_test_results(remote_machines, server_config_list, cur_test_log_dir)
         receive_file_from_multiple_machines(remote_machines, directories)
 
 
+def print_commands(commands):
+    for ip, (cmd, work_dir, _, _) in commands.items():
+        print(f"{ip} in {work_dir}: {cmd}")
+
 ################################# Main ##################################
 
 if __name__ == "__main__":
@@ -411,10 +417,11 @@ if __name__ == "__main__":
         os.makedirs(full_cur_test_log_dir, exist_ok=True)
 
         # Execute test commands
-        print(setup_commands)
+        time.sleep(5)
+        print_commands(setup_commands)
         execute_command_on_multiple_machines(remote_machines, setup_commands) # Setup virtual network
         time.sleep(15) # Wait for a while
-        print(clean_commands)
+        print_commands(clean_commands)
         execute_command_on_multiple_machines(remote_machines, clean_commands) # Clean virtual network
         time.sleep(20) # Wait for a while
 
