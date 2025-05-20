@@ -73,15 +73,9 @@ Before running the experiments, please setup a VM cluster including a master VM 
 
 1. On the master VM (1) change into "driver" directory; (2) switch into "tstenv" python virtual environment.
 
-2. **(Important)** Switch into "rigid" branch (dedicated branch for experiments) of this repository:
+2. Modify the "driver/batch_test.py" script on demand:
 
-    ```bash
-    git checkout rigid
-    ```
-
-3. Modify the "driver/batch_test.py" script on demand:
-
-    3.1. For uni-BBNS experiments, set USE_BEST_BBNS_NUM to False, and set BBNS number to 1.
+    2.1. For uni-BBNS experiments, set USE_BEST_BBNS_NUM to False, and set BBNS number to 1.
 
     ```python
     SERVER_BBNS_NUM_TEST = False
@@ -94,7 +88,7 @@ Before running the experiments, please setup a VM cluster including a master VM 
     ],
     ```
 
-    3.2. For multi-BBNS experiments: if you want to test VN construction/destruction time-cost under different BBNS number (factors of vlink number), set like below:
+    2.2. For multi-BBNS experiments: if you want to test VN construction/destruction time-cost under different BBNS number (factors of vlink number), set like below:
     ```python
     SERVER_BBNS_NUM_TEST = True
     USE_BEST_BBNS_NUM = False
@@ -119,7 +113,7 @@ Before running the experiments, please setup a VM cluster including a master VM 
     ],
     ```
 
-    3.3. ***Uncomment*** lines of topologies you want to test, where "grid", "clos", and "as" represents "+Grid", "Fattree", and "BGP AS" topologies in our paper:
+    2.3. ***Uncomment*** lines of topologies you want to test, where "grid", "clos", and "as" represents "+Grid", "Fattree", and "BGP AS" topologies in our paper:
     ```python
     # ["grid", "10", "10"],
     # ["grid", "20", "20"],
@@ -148,7 +142,7 @@ Before running the experiments, please setup a VM cluster including a master VM 
     # ["as", "large"],
     ```
 
-4. Results will be placed at the directory "driver/raw_results/result-XX-servers", in which VN construction/destruction time will be shown in setup.log/clean.log with "Operation time" entry.
+3. Results will be placed at the directory "driver/raw_results/result-XX-servers", in which VN construction/destruction time will be shown in setup.log/clean.log with "Operation time" entry.
 
 ### Measuring platform-specific parameters
 
