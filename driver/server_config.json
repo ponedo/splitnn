@@ -1,0 +1,18 @@
+{
+    "servers": [
+        {
+            "ipAddr": "10.10.30.148",
+            "user": "cnic",
+            "password": "XXXXXXXXXX",
+            "phyIntf": "enp1s0",
+            "infraWorkDir": "/home/cnic/agile-emulator-exp/topo-setup-test/infra",
+            "dockerImageName": "ponedo/frr-ubuntu20:tinycmd",
+            "kernFuncsToMonitor":  [
+                ["setup", "cctr", "chroot_fs_refs"],
+                ["setup", "topo_setup_test", "wireless_nlevent_flush"],
+                ["setup", "topo_setup_test", "fib6_clean_tree"],
+                ["clean", "", "br_vlan_flush"]
+            ]
+        }
+    ]
+}

@@ -1,0 +1,97 @@
+#!/usr/bin/env bpftrace
+
+BEGIN
+{
+    @total_oncpu_time = sum(0);
+    @total_offcpu_time = sum(0);
+}
+
+
+tracepoint:sched:sched_switch
+/args->prev_comm == "cctr"/
+{
+    // Add time spent on-CPU to the total when 'cctr' is switched out    
+    @out_cctr_time[args->prev_pid] = nsecs;
+    @switch_off_time = count();
+    @switch_off_reason[args->next_comm] = count();
+    @switch_off_kstack[kstack] = count();
+    if (@start_cctr_time[args->prev_pid]) {
+        $oncpu_time = nsecs - @start_cctr_time[args->prev_pid];
+        @total_oncpu_time = sum($oncpu_time);
+        delete(@start_cctr_time[args->prev_pid]);
+    }
+    // printf("sched, on_cpu_time: %llu\n", $oncpu_time);
+    // printf("pid: %llu\n\n", args->prev_pid);
+}
+
+tracepoint:sched:sched_switch
+/args->next_comm == "cctr"/
+{
+    // Record the time when 'cctr' starts running
+    @start_cctr_time[args->next_pid] = nsecs;
+    @switch_on_time = count();
+    if (@out_cctr_time[args->next_pid]) {
+        $offcpu_time = nsecs - @out_cctr_time[args->next_pid];
+        @total_offcpu_time = sum($offcpu_time);
+        delete(@out_cctr_time[args->next_pid]);
+    }
+    // printf("start_cctr_time: %llu\n", @start_cctr_time[args->next_pid]);
+    // printf("pid: %llu\n\n", args->next_pid);
+}
+
+tracepoint:irq:irq_handler_entry,
+tracepoint:irq:softirq_entry
+/@start_cctr_time[tid]/ 
+{
+    @interrupt_start_time[tid] = nsecs;
+}
+
+tracepoint:irq:irq_handler_exit,
+tracepoint:irq:softirq_exit
+/@interrupt_start_time[tid]/ 
+{
+    $interrupt_time = nsecs - @interrupt_start_time[tid];
+    @total_interrupt_time = sum($interrupt_time);
+    delete(@interrupt_start_time[tid]);
+}
+
+kprobe:native_queued_spin_lock_slowpath
+/comm == "cctr"/
+{
+    @spinlock_contention = count();
+}
+
+tracepoint:lock:contention_begin
+/comm == "cctr"/
+{
+    @lock_contention = count();
+}
+
+/*
+kprobe:_raw_spin_lock, kprobe:_raw_spin_lock_bh, kprobe:_raw_spin_lock_irq, kprobe:_raw_spin_lock_irqsave
+/comm == "cctr"/
+{
+    // Record the start time of the spinlock attempt
+    @start_lock_time[tid] = nsecs;
+    // printf("start_lock_time: %llu\n", @start_lock_time[tid]);
+    // printf("tid: %llu\n\n", tid);
+}
+
+kprobe:_raw_spin_unlock, kprobe:_raw_spin_unlock_bh, kprobe:_raw_spin_unlock_irq, kprobe:_raw_spin_unlock_irqrestore
+/comm == "cctr" && @start_lock_time[tid]/
+{
+    // Calculate the time it took to acquire the spinlock
+    $lock_time = nsecs - @start_lock_time[tid];
+    @total_lock_time = sum($lock_time); // Accumulate total time
+    delete(@start_lock_time[tid]);
+    // printf("unlock, lock_time: %llu\n", $lock_time);
+    // printf("tid: %llu\n\n", tid);
+}
+*/
+
+END
+{
+    clear(@start_cctr_time);
+    clear(@out_cctr_time);
+    //clear(@start_lock_time);
+}

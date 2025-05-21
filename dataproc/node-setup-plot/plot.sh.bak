@@ -1,0 +1,43 @@
+WORK_DIR=$(dirname $(readlink -f $0))/..
+logdir=$1
+
+
+python3 ${WORK_DIR}/plot/plot_outlier.py ${logdir}
+python3 ${WORK_DIR}/plot/plot_outlier.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 200
+python3 ${WORK_DIR}/plot/plot_outlier.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 200
+
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time.py ${logdir}
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 200
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 200
+
+python3 ${WORK_DIR}/plot/plot_outlier_fork_misc.py ${logdir}
+python3 ${WORK_DIR}/plot/plot_outlier_fork_misc.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_fork_misc.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 200
+python3 ${WORK_DIR}/plot/plot_outlier_fork_misc.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_fork_misc.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 200
+
+python3 ${WORK_DIR}/plot/plot_moving_average.py ${logdir} --window 100
+python3 ${WORK_DIR}/plot/plot_moving_average.py ${logdir} --window 200
+
+python3 ${WORK_DIR}/plot/plot_outlier_kill.py ${logdir}
+python3 ${WORK_DIR}/plot/plot_outlier_kill.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_kill.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 200
+python3 ${WORK_DIR}/plot/plot_outlier_kill.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_kill.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 200
+
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time_kill.py ${logdir}
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time_kill.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time_kill.py ${logdir} --outlier-tolerance-offset-ratio 1 --window 200
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time_kill.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 100
+python3 ${WORK_DIR}/plot/plot_outlier_acc_time_kill.py ${logdir} --outlier-tolerance-offset-ratio 2 --window 200
+
+cd ${logdir}
+mkdir -p csv
+mv *.csv csv
+mkdir -p figures
+mv *.png figures
+cd - > /dev/null
