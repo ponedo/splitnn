@@ -1,0 +1,6 @@
+h2ROV\n(NSDI '25)	300
+StarryNet-test1\n(NSDI '23)	300
+StarryNet-test2\n(NSDI '23)	600
+Klonet\n(NSDI '24)	10
+SpaceDTNEmulator\n(CNERT '24)	20
+Maxinet\n(IFIP '14)	60

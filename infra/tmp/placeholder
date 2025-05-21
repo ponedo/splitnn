@@ -1,0 +1,12 @@
+Runtime logs include:
+ctr_log (cctr_log)
+kern_func
+setup_log.txt
+clean_log.txt
+link_log.txt
+
+Runtime tmp dirs include:
+nodes
+
+Docker image fs storage
+img_*
