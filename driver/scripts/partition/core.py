@@ -1,7 +1,7 @@
 from .fmt_util import *
 from .partition_topo_vm import partition_graph_across_vm
 from .partition_topo_pm import partition_graph_across_pm
-
+from .compute_tdf import compute_tdf
 
 def partition_topo(input_topo_filepath, server_config_list):
     """
@@ -13,11 +13,13 @@ def partition_topo(input_topo_filepath, server_config_list):
 
     # Read server configuration
     pm2servernum = {}
+    serverid2pmid = {}
     for i, server in enumerate(server_config_list):
         pm_id = server["phyicalMachineId"]
         if pm2servernum.get(pm_id) is None:
             pm2servernum[pm_id] = 0
         pm2servernum[pm_id] += 1
+        serverid2pmid[i] = pm_id
     print(f"Partitioning...")
     print(f"# of physical machines: {len(pm2servernum)}")
     print(f"# of servers: {len(server_config_list)}")
@@ -83,3 +85,15 @@ def partition_topo(input_topo_filepath, server_config_list):
 
     # Scan the adjacency_list, and allocate VXLAN IDs for cross-pm edges and cross-vm-intra-pm edges
     write_subtopos_to_file(nodes, adjacency_list, node2serverid, acc_server_num, input_topo_filepath)
+
+    # Calculate and print TDF of TBS-METIS and METIS
+    tbs_metis_node2server_id = node2serverid
+    metis_node2server_id = partition_graph_across_vm(
+        nodes, adjacency_list, len(server_config_list), 0)
+    tbs_metis_tdf = compute_tdf(nodes, adjacency_list, tbs_metis_node2server_id, serverid2pmid)
+    metis_tdf = compute_tdf(nodes, adjacency_list, metis_node2server_id, serverid2pmid)
+
+    print(f"TDF of TBS-METIS: {tbs_metis_tdf}")
+    print(f"TDF of METIS: {metis_tdf}")
+
+    return tbs_metis_tdf, metis_tdf

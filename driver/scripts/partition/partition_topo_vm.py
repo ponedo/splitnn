@@ -31,8 +31,12 @@ def create_metis_adjacency_list(nodes, adjacency_list):
 
 def partition_graph_across_vm(nodes, adjacency_list, num_partitions, acc_server_num):
     """Partitions the graph into num_partitions using METIS and writes each subgraph."""
+    node2serverid = {}
     if num_partitions == 1:
-        return nodes, adjacency_list
+        server_id = acc_server_num
+        for node in nodes:
+            node2serverid[node] = server_id
+        return node2serverid
 
     # Convert adjacency list to METIS format with correct indices
     start_time = time.time()
@@ -44,7 +48,6 @@ def partition_graph_across_vm(nodes, adjacency_list, num_partitions, acc_server_
     _, parts = metis.part_graph(metis_adjacency_list, nparts=num_partitions)
     # print("Partitioning completed. Time-cost: ", time.time() - start_time)
 
-    node2serverid = {}
     for idx, part in enumerate(parts):
         node = index_to_node[idx]  # Convert index back to original node ID
         server_id = part + acc_server_num
