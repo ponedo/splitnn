@@ -15,6 +15,7 @@ import (
 	"topo_setup_test/algo"
 
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
 
 type Servers struct {
@@ -111,6 +112,7 @@ func ConfigEnvs(
 	setDisableIpv6(disableIpv6)
 	setParallel(parallel)
 	setKernelPtySysctl()
+	setRlimits()
 	prepareRootfs(server.DockerImageName)
 	return nil
 }
@@ -345,6 +347,9 @@ func setKernelPtySysctl() {
 	ipv6RouteGcThreshPath := "/proc/sys/net/ipv6/route/gc_thresh"
 	ipv4HopLimitPath := "/proc/sys/net/ipv4/ip_default_ttl"
 	ipv6HopLimitPath := "/proc/sys/net/ipv6/conf/all/hop_limit"
+	netdevMaxBacklogPath := "/proc/sys/net/core/netdev_max_backlog"
+	soMaxConnPath := "/proc/sys/net/core/somaxconn"
+	rmemMaxPath := "/proc/sys/net/core/rmem_max"
 
 	// Desired values
 	newMaxValue := "262144"
@@ -361,6 +366,9 @@ func setKernelPtySysctl() {
 	newIpv6RouteGcThreshValue := "1024"
 	newipv4HopLimitValue := "255"
 	newipv6HopLimitValue := "255"
+	netdevMaxBacklogValue := "2000"
+	soMaxConnValue := "8192"
+	rmemMaxValue := "425984"
 
 	if err := SetSysctlValue(ptyMaxPath, newMaxValue); err != nil {
 		log.Fatalf("Error setting kernel.pty.max: %v", err)
@@ -412,7 +420,44 @@ func setKernelPtySysctl() {
 	} else {
 		fmt.Printf("Successfully set net.ipv6.route.gc_thresh to %s\n", newipv6HopLimitValue)
 	}
+	if err := SetSysctlValue(netdevMaxBacklogPath, netdevMaxBacklogValue); err != nil {
+		log.Fatalf("Error setting net.core.netdev_max_backlog: %v", err)
+	} else {
+		fmt.Printf("Successfully set net.core.netdev_max_backlog to %s\n", netdevMaxBacklogValue)
+	}
+	if err := SetSysctlValue(soMaxConnPath, soMaxConnValue); err != nil {
+		log.Fatalf("Error setting net.core.somaxconn: %v", err)
+	} else {
+		fmt.Printf("Successfully set net.core.somaxconn to %s\n", soMaxConnValue)
+	}
+	if err := SetSysctlValue(rmemMaxPath, rmemMaxValue); err != nil {
+		log.Fatalf("Error setting net.core.rmem_max: %v", err)
+	} else {
+		fmt.Printf("Successfully set net.core.rmem_max to %s\n", rmemMaxValue)
+	}
+}
 
+func setRlimit(resource int, name string) {
+	limit := &unix.Rlimit{
+		Cur: unix.RLIM_INFINITY,
+		Max: unix.RLIM_INFINITY,
+	}
+	if err := unix.Setrlimit(resource, limit); err != nil {
+		log.Fatalf("Failed to set %s: %v", name, err)
+	}
+	fmt.Printf("Set %s to unlimited\n", name)
+}
+
+func setRlimits() {
+	var rlim unix.Rlimit
+	_ = unix.Getrlimit(unix.RLIMIT_MEMLOCK, &rlim)
+	fmt.Printf("Before rlimit setting: RLIMIT_MEMLOCK = Cur=%d Max=%d\n", rlim.Cur, rlim.Max)
+
+	setRlimit(unix.RLIMIT_MEMLOCK, "RLIMIT_MEMLOCK") // ulimit -l
+	setRlimit(unix.RLIMIT_DATA, "RLIMIT_DATA")       // ulimit -m
+
+	_ = unix.Getrlimit(unix.RLIMIT_MEMLOCK, &rlim)
+	fmt.Printf("After rlimit setting: RLIMIT_MEMLOCK = Cur=%d Max=%d\n", rlim.Cur, rlim.Max)
 }
 
 func prepareRootfs(dockerImageName string) {

@@ -29,22 +29,36 @@ def create_metis_adjacency_list(nodes, adjacency_list):
     return metis_adjacency_list, node_to_index, index_to_node
 
 
-def partition_graph_across_vm(nodes, adjacency_list, num_partitions, acc_server_num):
+def partition_graph_across_vm(nodes, adjacency_list, num_partitions, acc_server_num, random=False):
     """Partitions the graph into num_partitions using METIS and writes each subgraph."""
+    node2serverid = {}
     if num_partitions == 1:
-        return nodes, adjacency_list
+        server_id = acc_server_num
+        for node in nodes:
+            node2serverid[node] = server_id
+        return node2serverid
 
     # Convert adjacency list to METIS format with correct indices
     start_time = time.time()
     metis_adjacency_list, node_to_index, index_to_node = create_metis_adjacency_list(nodes, adjacency_list)
 
     # Partition the graph into num_partitions parts using METIS
-    # print("Calling metis.part_graph...")
-    start_time = time.time()
-    _, parts = metis.part_graph(metis_adjacency_list, nparts=num_partitions)
+    # print("Calling metis.part_graph...")    # start_time = time.time()
+    while True:
+        try:
+            if random:
+                # Generate an random integer as seed
+                seed = int(np.random.randint(0, 100))
+                _, parts = metis.part_graph(metis_adjacency_list, nparts=num_partitions, niter=20, recursive=True, seed=seed)
+            else:
+                _, parts = metis.part_graph(metis_adjacency_list, nparts=num_partitions, niter=20, recursive=True)
+            break
+        except metis.METIS_InputError as e:
+            print(f"METIS Input Error: {e}")
+            print("Retrying with a different seed...")
+            continue
     # print("Partitioning completed. Time-cost: ", time.time() - start_time)
 
-    node2serverid = {}
     for idx, part in enumerate(parts):
         node = index_to_node[idx]  # Convert index back to original node ID
         server_id = part + acc_server_num
