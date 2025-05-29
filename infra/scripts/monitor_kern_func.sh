@@ -17,11 +17,6 @@ if [ -n "$COMM"  ]; then
     cat << EOF > $BPFTRACE_SCRIPT
 #!/usr/bin/env bpftrace
 
-BEGIN
-{
-    printf("Monitoring kernel function '%s' for process '%s'.\n", "$FUNCTION", "$COMM");
-}
-
 kprobe:$FUNCTION
 /comm == "$COMM"/
 {
@@ -35,22 +30,12 @@ kretprobe:$FUNCTION
     printf("%ld\n", \$duration);
     delete(@start[tid]);
 }
-
-END
-{
-    printf("Stopped monitoring kernel function '%s' for process '%s'.\n", "$FUNCTION", "$COMM");
-}
 EOF
 
 else
 
     cat << EOF > $BPFTRACE_SCRIPT
 #!/usr/bin/env bpftrace
-
-BEGIN
-{
-    printf("Monitoring kernel function '%s' for process '%s'.\n", "$FUNCTION", "$COMM");
-}
 
 kprobe:$FUNCTION
 {
@@ -62,11 +47,6 @@ kretprobe:$FUNCTION
     \$duration = nsecs - @start[tid];
     printf("%ld\n", \$duration);
     delete(@start[tid]);
-}
-
-END
-{
-    printf("Stopped monitoring kernel function '%s' for process '%s'.\n", "$FUNCTION", "$COMM");
 }
 EOF
 
