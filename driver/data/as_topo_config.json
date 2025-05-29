@@ -1,5 +1,8 @@
 {
     "small": "jp_kr_topo.txt",
     "medium": "cn_sea_topo.txt",
-    "large": "apac_topo.txt"
+    "large": "apac_topo.txt",
+    "us": "us_as_topo.txt",
+    "eu": "eu_as_topo.txt",
+    "full": "full_as_topo.txt"
 }

@@ -25,7 +25,7 @@ def generate_as_topology(size, filepath):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='A script to generate chain topology')
+    parser = argparse.ArgumentParser(description='A script to generate BGP AS topology')
     parser.add_argument('size', type=str, help='Size of AS topology')
     parser.add_argument('filepath', type=str, help='Output file name')
     args = parser.parse_args()
